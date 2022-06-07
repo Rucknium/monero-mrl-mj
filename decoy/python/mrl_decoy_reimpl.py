@@ -144,9 +144,10 @@ def picks():
     offsets_ratios = []
 
     mul = 1e5
-    #mul = 1e3
+    #mul = 1e3 # For testing
     while True:
         if mul <= 50: # TODO: Should be <= 1, but it crashes so far
+            pass
             break
         num_hits = 0;
         start = 1 # At start == 0 there's a corner case to test
@@ -183,16 +184,16 @@ def plot_picker_py(ratios):
 def ks(data1, data2):
     # https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test
     print("Performing Kolmogorov-Smirnov test")
-    print("Self-test", ks_2samp(data1[:, 1], data1[:, 1]))
-    print("Final-test", ks_2samp(data1[:, 1], data2[:, 1]))
+    print("Self-test: ", ks_2samp(data1[:, 1], data1[:, 1]))
+    print("Final-test:", ks_2samp(data1[:, 1], data2[:, 1]))
 
 def main():
     plot = True
-    plot = False
+    #plot = False
     parser = GetParser()
     args = parser.parse_args()
     start = 1 # At start == 0 there's a corner case to test
-
+    #picks() # test
     #max_element = 20
     #data1 = data1[:-max_element]
     #data2 = data2[:-max_element]

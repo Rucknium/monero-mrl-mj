@@ -21,6 +21,7 @@ def GetParser():
     return parser
 
 def plot_cpp_distrib(data, title=""):
+#    data = data[:-20]
     fig, (ax1, ax2) = plt.subplots(1, 2)
     if len(title):
         fig.suptitle(title)

@@ -15,6 +15,8 @@ from scipy.stats import gamma
 import decoy_consts
 import mrl_decoy_plot
 
+from scipy.stats import ks_2samp
+
 uint64_t_MAX = 18446744073709551615
 MIN_RCT_LENGTH = decoy_consts.CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE + 1
  
@@ -178,12 +180,22 @@ def plot_data(gamRVSMo, gamRVSPy, gamPDFPy):
 def plot_picker_py(ratios):
     mrl_decoy_plot.plot_cpp_distrib(ratios, "Python reimpl. gamma picker")
 
+def ks(data1, data2):
+    # https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test
+    print("Performing Kolmogorov-Smirnov test")
+    print("Self-test", ks_2samp(data1[:, 1], data1[:, 1]))
+    print("Final-test", ks_2samp(data1[:, 1], data2[:, 1]))
+
 def main():
     plot = True
-    #plot = False
+    plot = False
     parser = GetParser()
     args = parser.parse_args()
     start = 1 # At start == 0 there's a corner case to test
+
+    #max_element = 20
+    #data1 = data1[:-max_element]
+    #data2 = data2[:-max_element]
     
     data_cpp = decoy_consts.load_data(decoy_consts.PATH_MUL_2_RATIO_GOOD)
     if plot:
@@ -209,6 +221,8 @@ def main():
     if plot:
         plot_data(gamRVSMo, gamRVSPy, gamPDFPy)
     ##plot_function(data)
+
+    ks(data_cpp, ratios)
     
 if __name__ == "__main__":
     main()

@@ -15,12 +15,14 @@ def get_data_path(file_name):
     DIR_TMP = '/tmp/'
     DIR_TMP_ALT = HOME + '/temp/monero/'
     optimistic = DIR_TMP + '/' + file_name
+    #print("Optimistic", file_name, optimistic)
     if os.path.isfile(optimistic):
         return optimistic
     return DIR_TMP_ALT + file_name
 
-PATH_MUL_2_RATIO_GOOD   = get_data_path('mrl_mul_2_ratio_good.csv')
-PATH_GAMMA_PDF          = get_data_path('mrl_gamma_distrib.csv')
+PATH_MUL_2_RATIO_GOOD       = get_data_path('mrl_mul_2_ratio_good.csv')
+PATH_MUL_2_RATIO_GOOD_PY    = get_data_path('mrl_mul_2_ratio_good_py.csv')
+PATH_GAMMA_PDF              = get_data_path('mrl_gamma_distrib.csv')
 CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE =             10
 
 DIFFICULTY_TARGET_V2  =                          120  # // seconds

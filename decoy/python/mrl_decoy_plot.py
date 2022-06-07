@@ -12,6 +12,7 @@ import argparse
 #import shutil
 import decoy_consts
 
+
 def GetParser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--dload-disable', default=False, action='store_true', help="Disable download?")
@@ -19,7 +20,7 @@ def GetParser():
 
     return parser
 
-def plot_data(data, title=""):
+def plot_cpp_distrib(data, title=""):
     fig, (ax1, ax2) = plt.subplots(1, 2)
     if len(title):
         fig.suptitle(title)
@@ -50,7 +51,7 @@ def main():
     args = parser.parse_args()
     data = decoy_consts.load_data(decoy_consts.PATH_MUL_2_RATIO_GOOD)
     #print(data)
-    plot_data(data, "Monero C++ gamma picker")
+    plot_cpp_distrib(data, "Monero C++ gamma picker")
     #plot_function(data)
     
 if __name__ == "__main__":

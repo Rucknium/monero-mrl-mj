@@ -176,23 +176,39 @@ def plot_data(gamRVSMo, gamRVSPy, gamPDFPy):
     plt.show()
 
 def plot_picker_py(ratios):
-    mrl_decoy_plot.plot_data(ratios, "Python reimpl. gamma picker")
+    mrl_decoy_plot.plot_cpp_distrib(ratios, "Python reimpl. gamma picker")
 
 def main():
+    plot = True
+    #plot = False
     parser = GetParser()
     args = parser.parse_args()
     start = 1 # At start == 0 there's a corner case to test
-    rct_outputs = list(range(start, (decoy_consts.CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE + 1) * 1000 + start))
     
-    ratios = picks()
-    plot_picker_py(ratios)
+    data_cpp = decoy_consts.load_data(decoy_consts.PATH_MUL_2_RATIO_GOOD)
+    if plot:
+        mrl_decoy_plot.plot_cpp_distrib(data_cpp, "Monero C++ gamma picker")
+    
+    rct_outputs = list(range(start, (decoy_consts.CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE + 1) * 1000 + start))
+
+    if os.path.isfile(decoy_consts.PATH_MUL_2_RATIO_GOOD_PY):
+        print("Loading", decoy_consts.PATH_MUL_2_RATIO_GOOD_PY)
+        ratios = np.loadtxt(decoy_consts.PATH_MUL_2_RATIO_GOOD_PY)
+    else:
+        print("Generating", decoy_consts.PATH_MUL_2_RATIO_GOOD_PY)
+        ratios = picks()
+        np.savetxt(decoy_consts.PATH_MUL_2_RATIO_GOOD_PY, ratios)
+    if plot:
+        plot_picker_py(ratios)
+
     #return
     gamPDFPy = GammaPDFPython()
     gamRVSMo = GammaRVSMonero()
     gamRVSPy = GammaRVSPython()
-    
-    plot_data(gamRVSMo, gamRVSPy, gamPDFPy)
-    #plot_function(data)
+
+    if plot:
+        plot_data(gamRVSMo, gamRVSPy, gamPDFPy)
+    ##plot_function(data)
     
 if __name__ == "__main__":
     main()

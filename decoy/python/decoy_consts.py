@@ -21,6 +21,8 @@ PATH_MUL_2_RATIO_GOOD       = get_data_path('mrl_mul_2_ratio_good.csv')
 PATH_MUL_2_RATIO_GOOD_PY    = get_data_path('mrl_mul_2_ratio_good_py.csv')
 PATH_GAMMA_PDF              = get_data_path('mrl_gamma_distrib.csv')
 
+PATH_MUL_2_RATIO_GOOD_PY_OUT = '/tmp/mrl_gamma_distrib_py_out'
+
 GAMMA_SHAPE = 19.28
 GAMMA_SCALE = (1/1.61)
 CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE =             10

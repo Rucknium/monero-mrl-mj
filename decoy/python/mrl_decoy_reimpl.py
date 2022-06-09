@@ -8,6 +8,7 @@ from datetime import datetime
 import numpy as np
 from matplotlib import pyplot as plt
 import math
+import bisect
 import secrets
 import argparse
 from scipy.stats import gamma
@@ -77,8 +78,9 @@ class GammaPickerPyhon():
         return secrets.randbelow(maxVal)
 
     def lower_bound(self, iterable, val_to_find):
-        if val_to_find in iterable:
-            return iterable.index(val_to_find)
+        i = bisect.bisect_left(iterable, val_to_find)
+        if i != len(iterable) and iterable[i] == val_to_find:
+            return i
         return -1
 
     def pick_n_values(self, n):
@@ -103,11 +105,17 @@ class GammaPickerPyhon():
         output_index = int(x / self.average_output_time)
         if (output_index >= self.num_rct_outputs):
             return uint64_t_MAX; # bad pick
-        output_index = self.num_rct_outputs - 1 - output_index;
+        output_index = self.num_rct_outputs - output_index; # TODO: Altered
+        #if output_index == 0:
+        #    output_index = 1
 
         #print("output_index", output_index)
         index = self.lower_bound(self.rct_offsets, output_index)
-        THROW_WALLET_EXCEPTION_IF(index < 0, "error::wallet_internal_error", "output_index not found")
+        if index < 0:
+            # TODO: This was added!
+            print("output_index of {} not found".format(output_index))
+            return uint64_t_MAX # // bad pick
+        THROW_WALLET_EXCEPTION_IF(index < 0, "error::wallet_internal_error", "output_index of {} not found".format(output_index))
 
         first_rct = 0 if index == 0 else self.rct_offsets[index - 1];
         n_rct = self.rct_offsets[index] - first_rct;
@@ -138,15 +146,13 @@ def plot_picks(values):
 
     plt.show()
 
-def picks():
-    NUM_DRAWS = 100;
-
+def picks(NUM_DRAWS=100, output_file=''):
     offsets_ratios = []
 
     mul = 1e5
     #mul = 1e3 # For testing
     while True:
-        if mul <= 50: # TODO: Should be <= 1, but it crashes so far
+        if mul <= 1: # TODO: Should be <= 1, but it crashes so far
             pass
             break
         num_hits = 0;
@@ -160,7 +166,12 @@ def picks():
         offsets_ratios.append((mul, ratio_good_picks))
         mul *= 0.85
 
-    return np.array(offsets_ratios)
+    npa = np.array(offsets_ratios)
+    if output_file:
+        with open(output_file, 'w') as fout:
+            np.savetxt(output_file, npa, header='# multiplier_of_the_minimal_vector_length,ratio_good_picks')
+
+    return npa
 
 def plot_data(gamRVSMo, gamRVSPy, gamPDFPy):
     fig, (ax1, ax2) = plt.subplots(1, 2)
@@ -189,11 +200,11 @@ def ks(data1, data2):
 
 def main():
     plot = True
-    #plot = False
+    plot = False
     parser = GetParser()
     args = parser.parse_args()
     start = 1 # At start == 0 there's a corner case to test
-    #picks() # test
+    picks() # test
     #max_element = 20
     #data1 = data1[:-max_element]
     #data2 = data2[:-max_element]
@@ -224,6 +235,14 @@ def main():
     ##plot_function(data)
 
     ks(data_cpp, ratios)
+
+    MAX_NUM = 20
+    NUM_DRAWS = 100000
+    for i in range(0, MAX_NUM):
+        print("Writing {} or {}".format(i, MAX_NUM))
+        pass
+        #ratios_new = picks(NUM_DRAWS, decoy_consts.PATH_MUL_2_RATIO_GOOD_PY_OUT + "_{}.csv".format(i))
+        #ks(data_cpp, ratios_new)
     
 if __name__ == "__main__":
     main()

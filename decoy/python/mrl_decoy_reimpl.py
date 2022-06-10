@@ -83,13 +83,21 @@ class GammaPickerPyhon():
             return i
         return -1
 
-    def pick_n_values(self, n):
+    def pick_n_values_ratio(self, n):
         good = 0
         for i in range(0, n):
             val = self.pick()
             if val != uint64_t_MAX:
                 good += 1
         return good / n
+
+    def pick_n_values(self, n):
+        ret = []
+        for i in range(0, n):
+            val = self.pick()
+            if val != uint64_t_MAX:
+                ret.append(val)
+        return ret
             
         
     def pick(self):
@@ -161,17 +169,47 @@ def picks(NUM_DRAWS=100, output_file=''):
         #print(rct_outputs)
         #print(len(rct_outputs))
         picker = GammaPickerPyhon(rct_outputs)
-        ratio_good_picks = picker.pick_n_values(NUM_DRAWS)
+        ratio_good_picks = picker.pick_n_values_ratio(NUM_DRAWS)
         print(ratio_good_picks, len(rct_outputs))
         offsets_ratios.append((mul, ratio_good_picks))
         mul *= 0.85
 
     npa = np.array(offsets_ratios)
     if output_file:
-        with open(output_file, 'w') as fout:
-            np.savetxt(output_file, npa, header='# multiplier_of_the_minimal_vector_length,ratio_good_picks')
+        np.savetxt(output_file, npa, header='# multiplier_of_the_minimal_vector_length,ratio_good_picks')
 
     return npa
+
+def picks_raw(NUM_DRAWS=100, output_file=''):
+    offsets_ratios = []
+
+    mul = 1e5
+    #mul = 1e3 # For testing
+    while True:
+        if mul <= 1: # TODO: Should be <= 1, but it crashes so far
+            pass
+            break
+        num_hits = 0;
+        start = 1 # At start == 0 there's a corner case to test
+        rct_outputs = list(range(start, int(MIN_RCT_LENGTH * mul) + start))
+        #print(rct_outputs)
+        #print(len(rct_outputs))
+        picker = GammaPickerPyhon(rct_outputs)
+        
+        picks = picker.pick_n_values(NUM_DRAWS)
+        print(len(rct_outputs))
+        
+
+        if output_file:
+            fname = output_file + "_{}.csv".format(math.floor(round(mul)))
+            np.savetxt(fname, picks)
+            print("Saved to", fname)
+
+        mul *= 0.85
+
+    #npa = np.array(offsets_ratios)
+
+    #return npa
 
 def plot_data(gamRVSMo, gamRVSPy, gamPDFPy):
     fig, (ax1, ax2) = plt.subplots(1, 2)
@@ -200,11 +238,14 @@ def ks(data1, data2):
 
 def main():
     plot = True
-    plot = False
+    #plot = False
     parser = GetParser()
     args = parser.parse_args()
     start = 1 # At start == 0 there's a corner case to test
-    picks() # test
+    #picks()
+    picks_raw(100000, '/tmp/picks_raw_py_mul_length')
+
+    #return
     #max_element = 20
     #data1 = data1[:-max_element]
     #data2 = data2[:-max_element]

@@ -34,4 +34,4 @@ RECENT_SPEND_WINDOW = (15 * DIFFICULTY_TARGET_V2)
 
 def load_data(path):
     print("Loading:", path)
-    return np.loadtxt(path, delimiter=',')
+    return np.loadtxt(path, delimiter=' ')

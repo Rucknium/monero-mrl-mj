@@ -9,12 +9,15 @@ import numpy as np
 from matplotlib import pyplot as plt
 import math
 import argparse
+from multiprocessing import Pool
 from scipy.stats import gamma
 from scipy.stats import ks_2samp
 import mrl_decoy_reimpl
 
 #import shutil
 import decoy_consts
+
+FNAME = '/tmp/picks_raw_py_mul_length'
 
 def GetParser():
     parser = argparse.ArgumentParser()
@@ -85,7 +88,13 @@ def plot_picks(values):
 def picks(NUM_DRAWS=100, output_file=''):
     offsets_ratios = []
 
-    for mul in get_muls():
+    mul = 1e5
+    #mul = 1e3 # For testing
+    while True:
+        if mul <= 1: # TODO: Should be <= 1, but it crashes so far
+            pass
+            break
+        mul = round(mul)
         num_hits = 0;
         start = 1 # At start == 0 there's a corner case to test
         rct_outputs = list(range(start, int(decoy_consts.MIN_RCT_LENGTH * mul) + start))
@@ -95,6 +104,7 @@ def picks(NUM_DRAWS=100, output_file=''):
         ratio_good_picks = picker.pick_n_values_ratio(NUM_DRAWS)
         print(ratio_good_picks, len(rct_outputs))
         offsets_ratios.append((mul, ratio_good_picks))
+        mul *= 0.85
 
     npa = np.array(offsets_ratios)
     if output_file:
@@ -105,7 +115,17 @@ def picks(NUM_DRAWS=100, output_file=''):
 def picks_raw(NUM_DRAWS=100, output_file=''):
     offsets_ratios = []
 
-    for mul in get_muls():
+    mulPrev = 0
+    mul = 1e5
+    #mul = 1e3 # For testing
+    while True:
+        if mul <= 1: # TODO: Should be <= 1, but it crashes so far
+            pass
+            break
+        mul = round(mul)
+        if mul == mulPrev:
+            break
+        mulPrev = mul
         rct_outputs = mrl_decoy_reimpl.gen_rct_outputs(mul)
         #print(rct_outputs)
         #print(len(rct_outputs))
@@ -118,28 +138,11 @@ def picks_raw(NUM_DRAWS=100, output_file=''):
             np.savetxt(fname, picks)
             print("Saved to", fname)
 
+        mul *= 0.85
+
     #npa = np.array(offsets_ratios)
 
     #return npa
-
-def plot_data(gamRVSMo, gamRVSPy, gamPDFPy):
-    fig, (ax1, ax2) = plt.subplots(1, 2)
-    bins = 50
-    fig.suptitle("Gamma distributions' PDFs")
-    ax1.hist(gamRVSMo.data, bins=bins)
-    ax2.hist(gamRVSPy.y,    bins=bins)
-    #ax2.plot(gamPDFPy.x, gamPDFPy.y)
-    ax1.grid()
-    ax2.grid()
-
-    ax1.set_xlabel("Monero")
-    ax2.set_xlabel("Python")
-    ax1.set_ylabel("Occurrences")
-
-    plt.show()
-
-def plot_picker_py(ratios):
-    plot_cpp_distrib(ratios, "Python reimpl. gamma picker")
 
 def get_muls():
     muls = []
@@ -160,6 +163,47 @@ def get_muls():
         mul *= 0.85
     return muls
 
+def picks_raw_internal(mul):
+    NUM_DRAWS = 100000
+    rct_outputs = mrl_decoy_reimpl.gen_rct_outputs(mul)
+    #print(rct_outputs)
+    print(len(rct_outputs))
+    picker = mrl_decoy_reimpl.GammaPickerPyhon(rct_outputs)
+    picks = picker.pick_n_values(NUM_DRAWS)
+
+    return picks
+
+def picks_raw_parallel(output_file=''):
+    muls = get_muls()
+    with Pool() as p:
+        picks_arr = p.map(picks_raw_internal, muls)
+
+    if output_file:
+        for mul, picks in zip(muls, picks_arr):
+            fname = output_file + "_{}.csv".format(math.floor(round(mul)))
+            np.savetxt(fname, picks)
+            print("Saved to", fname)
+        
+
+def plot_data(gamRVSMo, gamRVSPy, gamPDFPy):
+    fig, (ax1, ax2) = plt.subplots(1, 2)
+    bins = 50
+    fig.suptitle("Gamma distributions' PDFs")
+    ax1.hist(gamRVSMo.data, bins=bins)
+    ax2.hist(gamRVSPy.y,    bins=bins)
+    #ax2.plot(gamPDFPy.x, gamPDFPy.y)
+    ax1.grid()
+    ax2.grid()
+
+    ax1.set_xlabel("Monero")
+    ax2.set_xlabel("Python")
+    ax1.set_ylabel("Occurrences")
+
+    plt.show()
+
+def plot_picker_py(ratios):
+    plot_cpp_distrib(ratios, "Python reimpl. gamma picker")
+
 def ks(data1, data2):
     # https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test
     print("Performing Kolmogorov-Smirnov test")
@@ -168,8 +212,6 @@ def ks(data1, data2):
 
 
 def simple_run():
-    plot = True
-    #plot = False
     parser = GetParser()
     args = parser.parse_args()
     data = decoy_consts.load_data(decoy_consts.PATH_MUL_2_RATIO_GOOD)
@@ -183,8 +225,8 @@ def full_run():
     parser = GetParser()
     args = parser.parse_args()
     
-    fpath_template = '/tmp/picks_raw_py_mul_length'
-    #picks_raw(100, fpath_template)
+    fpath_template = FNAME
+    picks_raw(100, fpath_template)
     #picks_raw(10000, fpath_template)
     
 
@@ -234,7 +276,13 @@ def full_run():
 
 def main():
     #simple_run()
-    full_run()
+    #full_run()
+    muls = get_muls()
+    print(muls)
+    #picks_raw_parallel(FNAME)
+    #with Pool() as p:
+    #    ret = p.map(f, muls)
+    #print(ret)
     
 if __name__ == "__main__":
     main()
